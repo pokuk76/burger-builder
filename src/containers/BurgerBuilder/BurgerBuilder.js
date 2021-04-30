@@ -1,10 +1,13 @@
 import React, { Component } from 'react';
+import axios from '../../axios-orders';
 
-import Auxiliary from '../../hoc/Auxiliary';
+import Auxiliary from '../../hoc/Auxiliary/Auxiliary';
 import Burger from '../../components/Burger/Burger';
 import BuildControls from '../../components/Burger/BuildControls/BuildControls';
 import Modal from '../../components/UI/Modal/Modal';
 import OrderSummary from '../../components/Burger/OrderSummary/OrderSummary';
+import Spinner from '../../components/UI/Spinner/Spinner';
+import withErrorHandler from '../../hoc/withErrorHandler/withErrorHandler';
 
 const INGREDIENT_PRICES = {
     salad: 0.5,
@@ -15,17 +18,24 @@ const INGREDIENT_PRICES = {
 class BurgerBuilder extends Component {
     
     state = {
-        ingredients: {
-            salad: 0,
-            bacon: 0,
-            cheese: 0,
-            meat: 0
-        },
-        totalPrice: 4,
+        ingredients: null,
+        totalPrice: 4.0,
         purchasable: false,
-        purchasing: false
+        purchasing: false,
+        loading: false,
+        error: false
     }
     
+    componentDidMount() {
+        axios.get('https://react-burger-builder-3cd26-default-rtdb.firebaseio.com/ingredients.json')
+            .then(response => {
+                this.setState({ingredients: response.data});
+            })
+            .catch(error => {
+                this.setState({error: true});
+            });
+    }
+
     purchaseHandler = () => {
         /* Need to use an arrow function because this function is being triggered through an event handler (in BuildControls component)
            The "this" keyword no longer applies to this class component
@@ -39,7 +49,35 @@ class BurgerBuilder extends Component {
     }
 
     purchaseContinueHandler = () => {
-        alert("You continue.");
+        // alert("You continue.");
+        this.setState({loading: true});
+        /* In a production app, you should re-calculate price on the backend 
+            -> So it's really not a big deal if there price we send has weird floating point rounding
+        */
+        // const price = parseFloat(this.state.totalPrice.toFixed(2));
+
+        const order = {
+            ingredients: this.state.ingredients,
+            price: this.state.totalPrice,
+            customer: {
+                name: "Bartholomeu Poku",
+                address: {
+                    street: "Test Street",
+                    zipCode: "12345-67",
+                    country: "Togo"
+                },
+                email: "test@test.com"
+            },
+            deliveryMethod: "fastest"
+        }
+        axios.post("/orders.json", order)
+            .then(response => {
+                this.setState({ purchasing: false, loading: false });
+            })
+            .catch(error => {
+                this.setState({ purchasing: false, loading: false });
+                console.log(error);
+            });
     }
 
     updatePurchaseState (currentIngredients) {
@@ -64,7 +102,7 @@ class BurgerBuilder extends Component {
 
         const priceAddition = INGREDIENT_PRICES[type];
         const oldPrice = this.state.totalPrice;
-        const newPrice = oldPrice + priceAddition;
+        const newPrice = (oldPrice + priceAddition);
 
         this.setState({totalPrice: newPrice, ingredients: updatedIngredients});
         this.updatePurchaseState(updatedIngredients);
@@ -89,7 +127,7 @@ class BurgerBuilder extends Component {
 
         const priceDeduction = INGREDIENT_PRICES[type];
         const oldPrice = this.state.totalPrice;
-        const newPrice = oldPrice - priceDeduction;
+        const newPrice = (oldPrice - priceDeduction);
 
         this.setState({totalPrice: newPrice, ingredients: updatedIngredients});
         this.updatePurchaseState(updatedIngredients);
@@ -102,29 +140,46 @@ class BurgerBuilder extends Component {
         for (let key in disabledInfo) {
             disabledInfo[key] = disabledInfo[key] <= 0;
         }
+
+        let orderSummary = null;
+
+        let burger = this.state.error ? <p>Ingredients cannot be loaded right now ∏__∏ T__T</p> : <Spinner />;
+        if (this.state.ingredients) {
+            burger = (
+                <Auxiliary>
+                    <Burger ingredients={this.state.ingredients} />
+                    <BuildControls
+                        ingredientAdded={this.addIngredientHandler}
+                        ingredientRemoved={this.removeIngredientHandler}
+                        disabledControls={disabledInfo}
+                        price={this.state.totalPrice}
+                        purchasable={this.state.purchasable}
+                        ordered={this.purchaseHandler}
+                    />
+                </Auxiliary>
+            );
+
+            orderSummary = <OrderSummary
+                ingredients={this.state.ingredients}
+                purchaseCancelled={this.purchaseCancelHandler}
+                purchaseContinued={this.purchaseContinueHandler}
+                price={this.state.totalPrice.toFixed(2)}
+            />;
+        }
+
+        if (this.state.loading) {
+            orderSummary = <Spinner />;
+        }
+
         return(
             <Auxiliary>
                 <Modal 
                     show={this.state.purchasing}
                     modalClosed={this.purchaseCancelHandler}
                 >
-                    <OrderSummary 
-                        ingredients={this.state.ingredients} 
-                        purchaseCancelled={this.purchaseCancelHandler} 
-                        purchaseContinued={this.purchaseContinueHandler}
-                        price={this.state.totalPrice.toFixed(2)}
-                    />
+                    { orderSummary }
                 </Modal>
-                
-                <Burger ingredients={this.state.ingredients} />
-                <BuildControls 
-                    ingredientAdded={this.addIngredientHandler}
-                    ingredientRemoved={this.removeIngredientHandler}
-                    disabledControls={disabledInfo}
-                    price={this.state.totalPrice}
-                    purchasable={this.state.purchasable}
-                    ordered={this.purchaseHandler}
-                />
+                { burger }
             </Auxiliary>
         );
     }
@@ -132,4 +187,4 @@ class BurgerBuilder extends Component {
 
 /* https://github.com/MartaNiemiec/Burger-builder/blob/master/src/components/Burger/BuildControls/BuildControl/BuildControl.css */
 
-export default BurgerBuilder;
+export default withErrorHandler(BurgerBuilder, axios);
