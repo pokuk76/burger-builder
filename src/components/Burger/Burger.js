@@ -1,4 +1,5 @@
 import React from 'react';
+// import { withRouter } from 'react-router-dom';
 
 import classes from './Burger.module.css';
 import BurgerIngredient from './BurgerIngredient/BurgerIngredient';
@@ -18,15 +19,17 @@ const burger = (props) => {
         transformedIngredients = <p>Start adding ingredients!</p>
     }
     
-    // console.log(transformedIngredients);
-
+    // console.log("Transform ingredients: ", transformedIngredients);
+    
     return(
         <div className={classes.Burger} >
             <BurgerIngredient type="bread-top" />
-            {transformedIngredients}
+                {transformedIngredients}
             <BurgerIngredient type="bread-bottom" />
         </div>
     );
 };
 
+/* Now we have access to the match, location, and history props through react-router */
+// export default withRouter(burger);
 export default burger;
