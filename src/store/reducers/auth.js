@@ -24,7 +24,8 @@ const authSuccess = (state, action) => {
 const authFail = (state, action) => {
     return updateObject(state, { 
         error: action.error, 
-        loading: true });
+        loading: false 
+    });
 };
 
 const reducer = (state=initialState, action) => {
