@@ -4,23 +4,24 @@ import { connect } from 'react-redux';
 
 import CheckoutSummary from '../../components/Order/CheckoutSummary/CheckoutSummary';
 import ContactData from '../Checkout/ContactData/ContactData';
+import * as actions from '../../store/actions/index';
 
 class Checkout extends Component {
     
-    componentWillMount() {
-        const query = new URLSearchParams(this.props.location.search);
-        const ingredients = {};
-        let price = 0;
-        for (let param of query.entries()) {
-            if (param[0] === "price") {
-                price = param[1];
-            } else {
-                // param = ['salad', '1']
-                ingredients[param[0]] = +param[1];
-            }
-        }
-        this.setState({ingredients: ingredients, price: price});
-    }
+    // componentWillMount() {
+    //     const query = new URLSearchParams(this.props.location.search);
+    //     const ingredients = {};
+    //     let price = 0;
+    //     for (let param of query.entries()) {
+    //         if (param[0] === "price") {
+    //             price = param[1];
+    //         } else {
+    //             // param = ['salad', '1']
+    //             ingredients[param[0]] = +param[1];
+    //         }
+    //     }
+    //     this.setState({ingredients: ingredients, price: price});
+    // }
 
     checkoutCancelledHandler = () => {
         this.props.history.goBack();
@@ -32,9 +33,12 @@ class Checkout extends Component {
 
     render() {
         let summary = <Redirect to='/' />;
+        
         if (this.props.ingredients) {
+            const purchasedRedirect = this.props.purchased ? <Redirect to='/' /> : null;
             summary = (
                 <div>
+                    { purchasedRedirect }
                     <CheckoutSummary 
                         ingredients={this.props.ingredients} 
                         checkoutCancelled = {this.checkoutCancelledHandler} 
@@ -53,7 +57,8 @@ class Checkout extends Component {
 const mapStateToProps = state => {
     return {
         ingredients: state.burgerBuilder.ingredients,
-    }
+        purchased: state.order.purchased,
+    };
 };
 
 export default connect(mapStateToProps)(Checkout);
