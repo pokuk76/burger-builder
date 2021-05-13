@@ -86,14 +86,14 @@ export const authCheckState = () => {
             dispatch( logout() );
         } else {
             const expirationDate = new Date(localStorage.getItem('expirationTime'));
-            if (expirationDate > new Date()){
+            if (expirationDate <= new Date()){
+                dispatch( logout() );
+            } else {
                 const userId = localStorage.getItem('userId');
                 dispatch( authSuccess(token, userId) );
-                const secondsToTimeout = expirationDate.getSeconds() - new Date().getSeconds();
+                const secondsToTimeout = (expirationDate.getTime() - new Date().getTime()) / 1000;
                 dispatch( checkAuthTimeout(secondsToTimeout) );
-            } else {
-
             }
         }
-    }
-}
+    };
+};
