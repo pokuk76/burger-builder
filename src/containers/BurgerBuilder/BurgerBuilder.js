@@ -22,12 +22,18 @@ class BurgerBuilder extends Component {
         this.props.onInitIngredients();
     }
 
+    
     purchaseHandler = () => {
-        /* Need to use an arrow function because this function is being triggered through an event handler (in BuildControls component)
-           The "this" keyword no longer applies to this class component
-           Alternatively, I would have binded this method in the class constructor 
-        */
-        this.setState({purchasing: true});
+        /**
+         * Need to use an arrow function because this function is being triggered through an event handler (in BuildControls component) 
+         * The "this" keyword no longer applies to this class component 
+         * Alternatively, I would have binded this method in the class constructor 
+         **/
+        if (this.props.isAuthenticated) {
+            this.setState({purchasing: true});
+        } else {
+            this.props.history.push('/auth');
+        }
     }
 
     purchaseCancelHandler = () => {
@@ -76,7 +82,8 @@ class BurgerBuilder extends Component {
                         disabledControls={disabledInfo}
                         price={this.props.price}
                         purchasable={this.updatePurchaseState(this.props.ingredients)}
-                        ordered={this.purchaseHandler}
+                        ordered={this.purchaseHandler} 
+                        isAuth={this.props.isAuthenticated} 
                     />
                 </Auxiliary>
             );
@@ -109,7 +116,8 @@ const mapStateToProps = state => {
     return {
         ingredients: state.burgerBuilder.ingredients,
         price: state.burgerBuilder.totalPrice,
-        error: state.burgerBuilder.error
+        error: state.burgerBuilder.error, 
+        isAuthenticated: state.auth.token !== null, 
     }
 }
 const mapDispatchToProps = dispatch => {
