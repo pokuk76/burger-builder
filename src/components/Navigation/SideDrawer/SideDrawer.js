@@ -16,7 +16,9 @@ const sideDrawer = (props) => {
     return (
         <Auxiliary>
             <Backdrop show={props.open} clicked={props.closed}/>
-            <div className={attachedClasses.join(' ')}>
+            <div className={attachedClasses.join(' ')} onClick={props.closed}>
+                {/* TODO: Right now clicking anywhere in the SideDrawer will close it (this is to ensure that 
+                    it closes after clicking a navlink). I think this is awful, def need to change */}
                 <div className={classes.Logo}>
                     <Logo />
                 </div>
