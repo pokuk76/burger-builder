@@ -9,9 +9,20 @@ import NavigationItem from './NavigationItem/NavigationItem';
 configure({ adapter: new Adapter() });
 
 describe('<NavigationItems />', () => {
-    it('should render two <NavigationItem /> elements if not authenticated', () => {
-        const wrapper = shallow(<NavigationItems />);
-        // isAuthenticated will be false because we are not passing any props, so expect 2 NavigationItem components
+
+    /* Test Setup */
+    let wrapper;
+    beforeEach(() => {
+        wrapper = shallow(<NavigationItems />);
+    });
+
+    it('should render 2 <NavigationItem /> elements if not authenticated', () => {
+        // isAuthenticated will be false if we are not passing any props
         expect(wrapper.find(NavigationItem)).toHaveLength(2);
+    });
+
+    it('should render 3 <NavigationItem /> elements if authenticated', () => {
+        wrapper.setProps({isAuthenticated: true});
+        expect(wrapper.find(NavigationItem)).toHaveLength(3);
     });
 });
